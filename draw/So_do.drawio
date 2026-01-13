@@ -1,0 +1,123 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.3.0" pages="2">
+  <diagram name="ESP32-CAM IoT Block Diagram" id="0">
+    <mxGraphModel dx="448" dy="213" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeWidth=1.5;" value="NGƯỜI DÙNG&#xa;(Web Browser / Mobile Device)" vertex="1">
+          <mxGeometry height="70" width="360" x="640" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="server" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeWidth=1.5;align=center;" value="&lt;div style=&quot;text-align: justify;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;WEB SERVER&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: justify;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- User Interface (UI) - Giao diện người dùng&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: justify;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- Command Processing - Xử lý lệnh&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: justify;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- Data Visualization - Trực quan hóa dữ liệu&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: justify;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- Communication Middleware - Phần mềm trung&amp;nbsp; gian&amp;nbsp;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="130" width="440" x="600" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="esp32cam" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeWidth=1.5;" value="ESP32-CAM MODULE" vertex="1">
+          <mxGeometry height="240" width="520" x="560" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="mcu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" value="Xử lý dữ liệu hình ảnh" vertex="1">
+          <mxGeometry height="30" width="211" x="569" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="camera" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;" value="Camera Module&lt;br&gt;Thu nhập dữ liệu hình ảnh" vertex="1">
+          <mxGeometry height="40" width="380" x="630" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="actuator" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeWidth=1.5;" value="THIẾT BỊ NGOẠI VI (ACTUATORS)&#xa;- LED (Demo)&#xa;- Đèn / Quạt / TV (Thực tế)&#xa;- Relay / Driver Interface" vertex="1">
+          <mxGeometry height="120" width="440" x="600" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="mb" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeWidth=1.5;" value="ESP32-CAM-MB&lt;br&gt;- Power&amp;nbsp; (5V → 3.3V)&lt;br&gt;- USB to UART Programmer" vertex="1">
+          <mxGeometry height="120" width="300" x="1140" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="user" style="endArrow=block;strokeWidth=1.5;" target="server">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="server" style="endArrow=block;strokeWidth=1.5;" target="esp32cam">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="esp32cam" style="endArrow=block;strokeWidth=1.5;" target="actuator">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="mb" style="endArrow=block;strokeWidth=1.5;" target="esp32cam">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-7" edge="1" parent="1" source="camera" style="endArrow=block;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="mcu">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="430" as="sourcePoint" />
+            <mxPoint x="580" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" value="Nhận dạng cử chỉ" vertex="1">
+          <mxGeometry height="30" width="209" x="860" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-10" edge="1" parent="1" source="mcu" style="endArrow=block;strokeWidth=1.5;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="usdzZf3AQd9ww1p3wQ-0-8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="925" y="630" as="sourcePoint" />
+            <mxPoint x="780" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" value="Giao tiếp mạng" vertex="1">
+          <mxGeometry height="30" width="204.5" x="717.75" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" value="Logic điều kiển" vertex="1">
+          <mxGeometry height="30" width="209" x="715.5" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-13" edge="1" parent="1" source="mcu" style="endArrow=block;strokeWidth=1.5;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="usdzZf3AQd9ww1p3wQ-0-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="830" y="490" as="sourcePoint" />
+            <mxPoint x="910" y="490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-14" edge="1" parent="1" source="usdzZf3AQd9ww1p3wQ-0-8" style="endArrow=block;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="usdzZf3AQd9ww1p3wQ-0-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="810" y="550" as="sourcePoint" />
+            <mxPoint x="810" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-16" edge="1" parent="1" source="usdzZf3AQd9ww1p3wQ-0-12" style="endArrow=block;strokeWidth=1.5;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="usdzZf3AQd9ww1p3wQ-0-11">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1002" y="530" as="sourcePoint" />
+            <mxPoint x="910" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-19" edge="1" parent="1" source="actuator" style="endArrow=block;strokeWidth=1.5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="server">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="750" />
+              <mxPoint x="350" y="530" />
+              <mxPoint x="350" y="295" />
+            </Array>
+            <mxPoint x="540" y="740" as="sourcePoint" />
+            <mxPoint x="400" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="usdzZf3AQd9ww1p3wQ-0-20" edge="1" parent="1" source="usdzZf3AQd9ww1p3wQ-0-11" style="endArrow=block;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="670" />
+              <mxPoint x="590" y="670" />
+              <mxPoint x="350" y="670" />
+            </Array>
+            <mxPoint x="480" y="610" as="sourcePoint" />
+            <mxPoint x="350" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Cwnf-JmlifXyu2GYMdo1-1" edge="1" parent="1" source="user" style="endArrow=block;strokeWidth=1.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="165" />
+              <mxPoint x="1160" y="300" />
+              <mxPoint x="1160" y="380" />
+            </Array>
+            <mxPoint x="810" y="380" as="sourcePoint" />
+            <mxPoint x="820" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="pbtYfgC9qZa8vCaWC3qB" name="Trang-2">
+    <mxGraphModel dx="827" dy="475" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
