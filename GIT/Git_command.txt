@@ -1,4 +1,4 @@
-cd C:
+ cd C:
 cd Git
 
 git config --global user.name "<user name>" : Khai báo user name
