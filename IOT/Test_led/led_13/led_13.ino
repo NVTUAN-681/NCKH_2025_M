@@ -5,14 +5,15 @@ void setup()
 {
 // pinMode(LED_PIN_4, OUTPUT);   
 pinMode(LED_PIN_13, OUTPUT); 
+Serial.begin(115200);
 }  
 
 void loop() {   
   // digitalWrite(LED_PIN_4, LOW);  // Bật LED 
   digitalWrite(LED_PIN_13, LOW);
-  // Serial.write("off");
+  Serial.print("off\n");
   delay(500);
   digitalWrite(LED_PIN_13, HIGH);
-  // Serial.write("on");
+  Serial.print("on\n");
   delay(500);
 }

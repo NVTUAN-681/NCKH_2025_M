@@ -38,8 +38,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "UTC_A2";
-const char* password = "";
+const char* ssid = "TP-Link_8BAE";
+const char* password = "45934414";
 
 void startCameraServer();
 void setupLedFlash(int pin);
