@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hand Control Dashboard</title>
+    <style>
+        .container { text-align: center; margin-top: 50px; }
+        #video-screen { width: 640px; height: 480px; border: 5px solid #333; background: #000; margin-bottom: 20px; }
+        .btn { padding: 15px 30px; font-size: 18px; cursor: pointer; border-radius: 8px; }
+        .on { background-color: #28a745; color: white; }
+        .off { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Hệ thống điều khiển bằng cử chỉ</h2>
+        <div id="video-container">
+            <img id="video-screen" src="" alt="Camera đang tắt...">
+        </div>
+        
+        <button id="camera-btn" class="btn on" onclick="toggleCamera()">Bật Camera & AI</button>
+    </div>
+
+    <script>
+        let isCameraOn = false;
+        function toggleCamera() {
+            const btn = document.getElementById('camera-btn');
+            const screen = document.getElementById('video-screen');
+            
+            isCameraOn = !isCameraOn;
+            
+            if (isCameraOn) {
+                btn.innerText = "Tắt Camera & AI";
+                btn.className = "btn off";
+                // Gọi tới route stream của Flask
+                screen.src = "/video_feed"; 
+            } else {
+                btn.innerText = "Bật Camera & AI";
+                btn.className = "btn on";
+                screen.src = ""; // Dừng luồng ảnh
+            }
+        }
+    </script>
+</body>
+</html>

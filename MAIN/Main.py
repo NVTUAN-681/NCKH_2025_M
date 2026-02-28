@@ -1,5 +1,6 @@
 import cv2
 import json
+import time
 import numpy as np
 import mediapipe as mp
 import paho.mqtt.client as mqtt
@@ -61,24 +62,35 @@ def is_hand_open(landmarks):
     return open_count >= 3
 
 # Mở webcam 
+# ESP32_CAM = "http://192.168.0.105:81/stream"
+# cap = cv2.VideoCapture(ESP32_CAM)
 cap = cv2.VideoCapture(0)
 
 status = 0
 last_status = -1
+
+
+frame_count = 0
+process_count = 0
+fps_timer = time.time()
+frame_count_display = 0
+process_count_display = 0
 
 # Sử dụng model để phát hiện bàn tay và điều khiển LED
 with HandLandmarker.create_from_options(options) as landmarker:
 
     while cap.isOpened():
         ret, frame = cap.read()
+        frame_count += 1
         if not ret:
-            break
+            break 
 
         frame = cv2.flip(frame, 1)
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
 
         result = landmarker.detect_for_video(mp_image, int(cap.get(cv2.CAP_PROP_POS_MSEC)))
+        process_count += 1
 
         open_hands = 0
         fist_hands = 0
@@ -106,7 +118,14 @@ with HandLandmarker.create_from_options(options) as landmarker:
 
         cv2.putText(frame, f"STATUS: {text}", (20,50),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, color, 3)
-
+        if(time.time() - fps_timer) >= 1.0:
+            frame_count_display = frame_count
+            process_count_display = process_count
+            fps_timer = time.time()
+            frame_count = 0
+            process_count = 0
+        cv2.putText(frame, f"FPS: {process_count_display} / {frame_count_display}", (20,100),
+        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,0), 2)
         cv2.imshow("Hand Control", frame)
         print(status)
         if status != last_status:

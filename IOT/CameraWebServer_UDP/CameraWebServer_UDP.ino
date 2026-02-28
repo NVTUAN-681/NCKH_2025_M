@@ -1,5 +1,6 @@
 #include "esp_camera.h"
 #include <WiFi.h>
+#include <WiFiUdp.h>
 
 #define LED_FLASH_GPIO 4
 
@@ -38,11 +39,16 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "FPT-Telecom-6G_EXT";
-const char* password = "0903238119";
+const char* ssid = "TP-Link_8BAE";
+const char* password = "45934414";
 
 void startCameraServer();
 void setupLedFlash(int pin);
+
+// Cấu hình UDP
+WiFiUDP udp;
+const char* laptop_ip = "192.168.0.104"; // THAY BẰNG IP LAPTOP CỦA BẠN
+const int udp_port = 12345;
 
 void setup() {
   Serial.begin(115200);
@@ -72,24 +78,24 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_QQVGA;
+  config.frame_size = FRAMESIZE_QVGA;
   config.pixel_format = PIXFORMAT_JPEG; // for streaming
   //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 40;
+  config.jpeg_quality = 60;
   config.fb_count = 1;
   
   // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
   //                      for larger pre-allocated frame buffer.
   if(config.pixel_format == PIXFORMAT_JPEG){
     if(psramFound()){
-      config.jpeg_quality = 40;
+      config.jpeg_quality = 60;
       config.fb_count = 2;
       config.grab_mode = CAMERA_GRAB_LATEST;
     } else {
       // Limit the frame size when PSRAM is not available
-      config.frame_size = FRAMESIZE_QQVGA;
+      config.frame_size = FRAMESIZE_QVGA;
       config.fb_location = CAMERA_FB_IN_DRAM;
     }
   } else {
@@ -151,16 +157,39 @@ void setup() {
   Serial.println("");
   Serial.println("WiFi connected");
 
-  startCameraServer();
+  // startCameraServer();
   digitalWrite(LED_FLASH_GPIO, LOW);   // BẬT LED khi camera sẵn sàng
 
-  Serial.print("Camera Ready! Use 'http://");
-  Serial.print(WiFi.localIP());
-  Serial.println("' to connect");
+  Serial.println("UDP Stream Ready!");
+
+  // Serial.print("Camera Ready! Use 'http://");
+  // Serial.print(WiFi.localIP());
+  // Serial.println("' to connect");
+  udp.begin(23456); // Thêm dòng này vào cuối hàm setup()
 }
 
 void loop() {
-  // Do nothing. Everything is done in another task by the web server
+  Serial.println(WiFi.RSSI());
+camera_fb_t * fb = esp_camera_fb_get();
+  if (!fb) {
+    Serial.println("Camera capture failed");
+    return;
+  }
 
-  delay(10000);
+  // 4. Gửi UDP
+  if (udp.beginPacket(laptop_ip, udp_port)) {
+    udp.write(fb->buf, fb->len);
+    if (udp.endPacket()) {
+        // Serial.println("Packet sent!"); // Chỉ mở để debug
+    } else {
+        Serial.println("End packet failed");
+    }
+  } else {
+    Serial.println("Begin packet failed");
+  }
+
+  esp_camera_fb_return(fb);
+  
+  // 5. Tăng delay lên một chút để tránh tràn buffer UDP của Laptop
+  delay(500);
 }
