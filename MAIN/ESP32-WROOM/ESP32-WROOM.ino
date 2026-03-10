@@ -1,23 +1,28 @@
 #include <ArduinoJson.h>
-
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 #include <MQTTPubSubClient.h>
+#include <ESP32Servo.h>
 
+Servo myServo;
 WebSocketsClient client;
 MQTTPubSubClient mqtt;
 
-const char* ssid = "TP-Link_8BAE";
-const char* pass = "45934414";
+const char* ssid = "FPT Telecom-0636";
+const char* pass = "0903238119";
 
-#define ledPin 14
-// #define ledPin2 13
+#define Living_light 13
+#define Kitchen_light 14
+#define Door 18
 
 void setup() {
   Serial.begin(115200);
 
-pinMode(ledPin,OUTPUT);
-// pinMode(ledPin2,OUTPUT);
+  pinMode(Living_light, OUTPUT);
+  pinMode(Kitchen_light, OUTPUT);
+
+  myServo.attach(Door, 500, 2400);
+  myServo.write(0); 
 
   Serial.print("connecting to wifi...");
   WiFi.begin(ssid, pass);
@@ -27,11 +32,8 @@ pinMode(ledPin,OUTPUT);
   }
 
   Serial.println(" connected! ");
-  Serial.println("connecting to host...");
-
+  
   mqtt.begin(client);
-  client.disconnect();
-
   const char* mqtt_server = "6419f78d6e5e4affbebe010720192414.s1.eu.hivemq.cloud";
   client.beginSSL(mqtt_server, 8884, "/mqtt");
   client.setReconnectInterval(2000);
@@ -41,16 +43,20 @@ pinMode(ledPin,OUTPUT);
     Serial.print(".");
     delay(500);
   }
-  Serial.print(" connected");
+  Serial.println(" connected");
 
+  // Đăng ký nhận dữ liệu từ topic "data"
   mqtt.subscribe("data", [](const String& payload, const size_t size){
-    Serial.print("Data: "); Serial.println(payload);
-    //data nhan duoc {"led1":0,"led2":1}
+    Serial.print("Dữ liệu về: "); Serial.println(payload);
+// {
+//  "living_led":1,
+//  "kitchen_led":0,
+//  "door":1
+// }
 
     StaticJsonDocument<200> doc;
-    //phan tich cu phap json
     DeserializationError error = deserializeJson(doc, payload);
-    //kiem tra loi
+
     if(error){
       Serial.print(F("deserializeJson() failed: "));
       Serial.println(error.f_str());
@@ -58,28 +64,41 @@ pinMode(ledPin,OUTPUT);
     }
 
     JsonObject obj = doc.as<JsonObject>();
-    if(obj.containsKey("led1")){
-      bool ledState = doc["led1"];
-      digitalWrite(ledPin,ledState);
-      int state = digitalRead(ledPin);
-      mqtt.publish("led1", String(state));
+
+    // Xử lý Đèn 1 (Living Room)
+    if(obj.containsKey("Living_light")){
+      bool val1 = doc["Living_light"];
+      digitalWrite(Living_light, val1);
+      mqtt.publish("status/Living_light", String(val1)); // Phản hồi trạng thái
     }
 
-    // if(obj.containsKey("led2")){
-    //   bool ledState2 = doc["led2"];
-    //   digitalWrite(ledPin2,ledState2);
-    //   int state = digitalRead(ledPin2);
-    //   mqtt.publish("led2", String(state));
-    // }
+    // Xử lý Đèn 2 (Kitchen Room)
+    if(obj.containsKey("Kitchen_light")){
+      bool val2 = doc["Kitchen_light"];
+      digitalWrite(Kitchen_light, val2);
+      mqtt.publish("status/Kitchen_light", String(val2)); // Phản hồi trạng thái
+    }
+
+    // Xử lý Cửa (Servo)
+    if(obj.containsKey("Door")){
+      int doorPos = doc["Door"];
+      if(doorPos == 1) {
+          myServo.write(90); // Mở cửa
+          Serial.println("Cửa: MỞ");
+      } else {
+          myServo.write(0);  // Đóng cửa
+          Serial.println("Cửa: ĐÓNG");
+      }
+      mqtt.publish("status/Door", String(doorPos)); // Sửa lỗi String ở đây
+    }
   });
 }
 
 void loop(){
-  mqtt.update(); // phai co dong nay
+  mqtt.update(); 
   static uint32_t prev_ms = millis();
-  if (millis()> prev_ms + 10000){
+  if (millis() > prev_ms + 10000){
     prev_ms = millis();
-    String data = String(millis()/1000);
-    mqtt.publish("uptime", data);
+    mqtt.publish("uptime", String(millis()/1000));
   }
 }

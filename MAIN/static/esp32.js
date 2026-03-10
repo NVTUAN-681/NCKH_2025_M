@@ -76,9 +76,9 @@ function onMessageArrived(message) {
         let data = JSON.parse(message.payloadString);
         
         // Cập nhật cho Đèn 1
-        if (data.hasOwnProperty('led1')) {
+        if (data.hasOwnProperty('Living_light')) {
             const icon = document.getElementById('icon-light1');
-            if (data.led1 === 1) {
+            if (data.Living_light === 1) {
                 icon.classList.add('light-on'); // Thêm hiệu ứng sáng
                 console.log("Giao diện: Đèn 1 Bật");
             } else {
@@ -87,10 +87,21 @@ function onMessageArrived(message) {
             }
         }
 
+        if (data.hasOwnProperty('Kitchen_light')) {
+            const icon = document.getElementById('icon-light2');
+            if (data.Kitchen_light === 1) {
+                icon.classList.add('light-on'); // Thêm hiệu ứng sáng
+                console.log("Giao diện: Đèn 2 Bật");
+            } else {
+                icon.classList.remove('light-on'); // Tắt hiệu ứng sáng
+                console.log("Giao diện: Đèn 2 Tắt");
+            }
+        }
+
         // Cập nhật cho Cửa (Nếu AI của bạn có điều khiển cửa)
-        if (data.hasOwnProperty('door')) {
+        if (data.hasOwnProperty('Door')) {
             const iconDoor = document.getElementById('icon-door');
-            if (data.door === 1) {
+            if (data.Door === 1) {
                 iconDoor.classList.add('door-open');
                 iconDoor.classList.replace('fa-door-closed', 'fa-door-open');
             } else {
@@ -109,9 +120,9 @@ function onMessageArrived(message) {
 
     // 1. Tạo dữ liệu để gửi đi
     let command = {};
-    if (device === 'light1') command = { led1: action === 'ON' ? 1 : 0 };
-    if (device === 'light2') command = { led2: action === 'ON' ? 1 : 0 };
-    if (device === 'door') command = { door: action === 'OPEN' ? 1 : 0 };
+    if (device === 'Living_light') command = { Living_light: action === 'ON' ? 1 : 0 };
+    if (device === 'Kitchen_light') command = { Kitchen_light: action === 'ON' ? 1 : 0 };
+    if (device === 'Door') command = { Door: action === 'OPEN' ? 1 : 0 };
 
     // 2. Gửi dữ liệu lên MQTT Topic "data"
     const message = new Paho.MQTT.Message(JSON.stringify(command));
@@ -119,18 +130,18 @@ function onMessageArrived(message) {
     client.send(message);
 
     // 3. Hiệu ứng giao diện (giữ nguyên logic cũ của bạn)
-    if (device === 'light1') {
-        const icon = document.getElementById('icon-light1');
+    if (device === 'Living_light'){
+        const icon = document.getElementById('icon-Living_light');
         if (action === 'ON') icon.classList.add('light-on');
         else icon.classList.remove('light-on');
     }
-    if (device === 'light2'){
-        const icon = document.getElementById('icon-light2');
+    if (device === 'Kitchen_light'){
+        const icon = document.getElementById('icon-Kitchen_light');
         if (action === 'ON') icon.classList.add('light-on');
         else icon.classList.remove('light-on');
     }
-    if(device === 'door'){
-        const iconDoor = document.getElementById('icon-door');
+    if(device === 'Door'){
+        const iconDoor = document.getElementById('icon-Door');
         if (action === 'OPEN') {
             iconDoor.classList.add('door-open');
             iconDoor.classList.replace('fa-door-closed', 'fa-door-open');
