@@ -59,7 +59,7 @@
                     <div class="card device-card p-3"> <!-- padding 3 -->
                         <div class="d-flex align-items-center"> <!-- icon va chu can giua theo chieu doc -->
                             <div class="me-4"> <!-- margin end(ben phai) 4 -->
-                                <i id="icon-light1" class="fas fa-lightbulb icon-light"></i> <!--fas lay icon bong den trong Font Awesome-->
+                                <i id="icon-Living_light" class="fas fa-lightbulb icon-light"></i> <!--fas lay icon bong den trong Font Awesome-->
                             </div>
                             <div class="flex-grow-1"> <!-- button gian ra chiem not phan con lai box-->
                                 <h6 class="text-uppercase text-muted small mb-1">Living Room</h6> <!-- margin bottom: 1 -->
@@ -78,7 +78,7 @@
                     <div class="card device-card p-3">
                         <div class="d-flex align-items-center">
                             <div class="me-4">
-                                <i id="icon-light2" class="fas fa-lightbulb icon-light"></i>
+                                <i id="icon-Kitchen_light" class="fas fa-lightbulb icon-light"></i>
                             </div>
                             <div class="flex-grow-1">
                                 <h6 class="text-uppercase text-muted small mb-1">Kitchen</h6>
@@ -97,7 +97,7 @@
                     <div class="card device-card p-3">
                         <div class="d-flex align-items-center">
                             <div class="me-4" style="perspective: 1000px;">
-                                <i id="icon-door" class="fas fa-door-closed icon-door"></i>
+                                <i id="icon-Door" class="fas fa-door-closed icon-door"></i>
                             </div>
                             <div class="flex-grow-1">
                                 <h6 class="text-uppercase text-muted small mb-1">Garage</h6>
@@ -111,6 +111,57 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card device-card p-4">
+            <h4 class="fw-bold mb-4"><i class="fas fa-clock me-2"></i>Automation Control</h4>
+            
+            <div class="row">
+                <div class="col-md-6 border-end">
+                    <h6><i class="fas fa-stopwatch me-2"></i>Thiết lập Lịch trình</h6>
+                    <div class="mb-3">
+                    <label class="small text-muted">Chọn thiết bị:</label>
+                    <select id="timerDevice" class="form-select" onchange="onDeviceChange()">
+                        <option value="Living_light">Living Room - Main Light</option>
+                        <option value="Kitchen_light">Kitchen - Cooking Light</option>
+                        <option value="Door">Garage - Security Door</option>
+                    </select>
+
+                    <!-- <button id="cancelTimerBtn" class="btn btn-sm btn-outline-danger d-none" onclick="cancelCurrentTimer()">Hủy bỏ</button> -->
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="small text-muted">Giờ bật:</label>
+                            <input type="time" id="startTime" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted">Giờ tắt:</label>
+                            <input type="time" id="endTime" class="form-control">
+                        </div>
+                    </div>
+                    <button class="btn btn-success w-100 mt-3" onclick="setSchedule()">Kích hoạt lịch trình</button>
+                </div>
+
+                <div class="col-md-6 ps-md-4">
+                    <h6><i class="fas fa-hourglass-half me-2"></i>Trạng thái đếm ngược</h6>
+                    <div id="timerDisplay" class="text-center py-4">
+                        <div class="display-4 fw-bold text-primary" id="countdown">00:00:00</div>
+                        <p id="timerStatus" class="text-muted mt-2">Chưa có lịch trình nào được thiết lập</p>
+                        <button id="cancelTimerBtn" class="btn btn-danger w-100 mt-2 d-none" onclick="cancelCurrentTimer()">
+                        <i class="fas fa-trash-alt me-2"></i>Hủy bỏ lịch trình
+                        </button>
+                        <!-- <div class="mt-3">
+                            <button id="cancelTimerBtn" class="btn btn-outline-danger btn-sm px-4 d-none" onclick="cancelCurrentTimer()">
+                                <i class="fas fa-times-circle me-1"></i> Hủy lịch trình hiện tại
+                            </button> -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

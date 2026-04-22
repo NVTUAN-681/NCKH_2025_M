@@ -77,7 +77,7 @@ function onMessageArrived(message) {
         
         // Cập nhật cho Đèn 1
         if (data.hasOwnProperty('Living_light')) {
-            const icon = document.getElementById('icon-light1');
+            const icon = document.getElementById('icon-Living_light');
             if (data.Living_light === 1) {
                 icon.classList.add('light-on'); // Thêm hiệu ứng sáng
                 console.log("Giao diện: Đèn 1 Bật");
@@ -88,7 +88,7 @@ function onMessageArrived(message) {
         }
 
         if (data.hasOwnProperty('Kitchen_light')) {
-            const icon = document.getElementById('icon-light2');
+            const icon = document.getElementById('icon-Kitchen_light');
             if (data.Kitchen_light === 1) {
                 icon.classList.add('light-on'); // Thêm hiệu ứng sáng
                 console.log("Giao diện: Đèn 2 Bật");
@@ -100,7 +100,7 @@ function onMessageArrived(message) {
 
         // Cập nhật cho Cửa (Nếu AI của bạn có điều khiển cửa)
         if (data.hasOwnProperty('Door')) {
-            const iconDoor = document.getElementById('icon-door');
+            const iconDoor = document.getElementById('icon-Door');
             if (data.Door === 1) {
                 iconDoor.classList.add('door-open');
                 iconDoor.classList.replace('fa-door-closed', 'fa-door-open');
@@ -150,4 +150,168 @@ function onMessageArrived(message) {
             iconDoor.classList.replace('fa-door-open', 'fa-door-closed');
         }
         }
+}
+
+// Thêm các biến quản lý timer vào đầu file esp32.js
+// Biến toàn cục để quản lý tiến trình
+// Đối tượng lưu trữ lịch trình của tất cả thiết bị
+let deviceSchedules = {
+    'Living_light': { interval: null, startTime: null, endTime: null, isStarted: false },
+    'Kitchen_light': { interval: null, startTime: null, endTime: null, isStarted: false },
+    'Door': { interval: null, startTime: null, endTime: null, isStarted: false }
+};
+
+
+// Hàm này để đảm bảo khi bạn chuyển sang thiết bị khác, 
+// nếu thiết bị đó chưa có lịch thì nút Hủy phải ẩn đi
+function onDeviceChange() {
+    const device = document.getElementById('timerDevice').value;
+    const schedule = deviceSchedules[device];
+
+    document.getElementById('startTime').value = schedule.startTime || "";
+    document.getElementById('endTime').value = schedule.endTime || "";
+
+    if (schedule.interval) {
+        document.getElementById('cancelTimerBtn').classList.remove('d-none');
+        // Cập nhật lại câu thông báo nếu cần
+        if (schedule.isStarted) {
+            document.getElementById('timerStatus').innerText = `Đang chạy lịch trình cho ${device}`;
+        } else {
+            document.getElementById('timerStatus').innerText = `Đã đặt lịch chờ cho ${device}`;
+        }
+    } else {
+        document.getElementById('countdown').innerText = "00:00:00";
+        document.getElementById('timerStatus').innerText = "Chưa có lịch trình nào được thiết lập";
+        document.getElementById('cancelTimerBtn').classList.add('d-none');
+    }
+}
+
+function setSchedule() {
+    const device = document.getElementById('timerDevice').value;
+    const startStr = document.getElementById('startTime').value;
+    const endStr = document.getElementById('endTime').value;
+
+    if (!startStr || !endStr) {
+        alert("Vui lòng nhập đầy đủ thời gian!");
+        return;
+    }
+
+    // 1. Xóa lịch trình cũ CỦA RIÊNG THIẾT BỊ NÀY nếu đang chạy
+    if (deviceSchedules[device].interval) {
+        clearInterval(deviceSchedules[device].interval);
+    }
+
+    // 2. Lưu thông số mới vào Object
+    deviceSchedules[device].startTime = startStr;
+    deviceSchedules[device].endTime = endStr;
+    deviceSchedules[device].isStarted = false;
+
+    const getFullDate = (timeStr) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        return d;
+    };
+
+    let startTime = getFullDate(startStr);
+    let endTime = getFullDate(endStr);
+    if (endTime <= startTime) endTime.setDate(endTime.getDate() + 1);
+
+    document.getElementById('cancelTimerBtn').classList.remove('d-none');
+
+    // 3. Chạy vòng lặp riêng cho thiết bị này
+    deviceSchedules[device].interval = setInterval(() => {
+        const now = new Date();
+        const currentSelectedDevice = document.getElementById('timerDevice').value;
+
+        // Logic điều khiển
+        if (now >= startTime && now < endTime) {
+            if (!deviceSchedules[device].isStarted) {
+                animateDevice(device, 'ON');
+                deviceSchedules[device].isStarted = true;
+            }
+            // Chỉ cập nhật giao diện nế người dùng ĐANG CHỌN thiết bị này trên màn hình
+            if (currentSelectedDevice === device) {
+                displayTime(endTime - now, `Đèn ${device} đang bật (đếm ngược tắt)`);
+            }
+        } 
+        else if (now >= endTime) {
+            animateDevice(device, 'OFF');
+            stopDeviceSchedule(device);
+        } 
+        else {
+            if (currentSelectedDevice === device) {
+                displayTime(startTime - now, `Chờ đến lúc bật ${device}`);
+            }
+        }
+    }, 1000);
+}
+
+function stopDeviceSchedule(device) {
+    if (deviceSchedules[device].interval) {
+        clearInterval(deviceSchedules[device].interval);
+        deviceSchedules[device].interval = null;
+        deviceSchedules[device].startTime = null;
+        deviceSchedules[device].endTime = null;
+        
+        // Nếu đang nhìn đúng thiết bị này thì reset màn hình
+        if (document.getElementById('timerDevice').value === device) {
+            cancelTimerUI();
+        }
+    }
+}
+
+// Hàm bổ trợ xóa giao diện
+// Hàm reset giao diện hiển thị đếm ngược
+function cancelTimerUI() {
+    document.getElementById('countdown').innerText = "00:00:00";
+    document.getElementById('timerStatus').innerText = "Chưa có lịch trình nào được thiết lập";
+    document.getElementById('cancelTimerBtn').classList.add('d-none');
+}
+
+// Hàm gọi từ nút "Hủy bỏ" trên giao diện
+function cancelCurrentTimer() {
+    const device = document.getElementById('timerDevice').value;
+    const schedule = deviceSchedules[device];
+
+    if (schedule.interval) {
+        // 1. Dừng vòng lặp đếm ngược
+        clearInterval(schedule.interval);
+
+        // 2. Kiểm tra nếu đèn ĐANG BẬT thì phải tắt đi
+        if (schedule.isStarted) {
+            console.log(`Lịch trình đang chạy, tiến hành tắt thiết bị: ${device}`);
+            // Gửi lệnh tắt tương ứng (OFF cho đèn, CLOSE cho cửa)
+            const offAction = (device === 'Door') ? 'CLOSE' : 'OFF';
+            animateDevice(device, offAction);
+        }
+
+        // 3. Reset dữ liệu của thiết bị trong bộ nhớ
+        schedule.interval = null;
+        schedule.startTime = null;
+        schedule.endTime = null;
+        schedule.isStarted = false;
+
+        // 4. Reset giao diện nhập liệu về mặc định (Trống)
+        document.getElementById('startTime').value = "";
+        document.getElementById('endTime').value = "";
+
+        // 5. Reset khu vực hiển thị đếm ngược (Cột bên phải)
+        document.getElementById('countdown').innerText = "00:00:00";
+        document.getElementById('timerStatus').innerText = "Chưa có lịch trình nào được thiết lập";
+        document.getElementById('cancelTimerBtn').classList.add('d-none');
+
+        console.log(`Đã hủy bỏ và reset hoàn toàn cho: ${device}`);
+    }
+}
+
+// Hàm hiển thị thời gian đếm ngược lên màn hình
+function displayTime(diffMs, statusText) {
+    if (diffMs < 0) return;
+    const h = Math.floor(diffMs / 3600000).toString().padStart(2, '0');
+    const m = Math.floor((diffMs % 3600000) / 60000).toString().padStart(2, '0');
+    const s = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+
+    document.getElementById('countdown').innerText = `${h}:${m}:${s}`;
+    document.getElementById('timerStatus').innerText = statusText;
 }
