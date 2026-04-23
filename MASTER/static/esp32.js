@@ -8,8 +8,10 @@ const CLIENT_ID = "web_client_" + Math.random().toString(16).substr(2, 8);
 const USER = "NCKH2026";
 const PASS = "Nckh-2026";
 
-const TOPIC_SET = "data";    // Gửi lệnh đi
-const TOPIC_STATUS = "data"; // Nhận trạng thái về
+
+const TOPIC_COMMAND = "home/commands"; // Gửi lệnh lẻ xuống ESP32
+const TOPIC_STATE = "home/state";     // Nhận trạng thái gộp từ ESP32
+const TOPIC_HEARTBEAT = "home/heartbeat"; // Theo dõi sức khỏe thiết bị
 
 // 2. Khởi tạo MQTT Client
 const client = new Paho.MQTT.Client(BROKER, PORT, CLIENT_ID);
@@ -34,13 +36,17 @@ function onFail() {
     document.getElementById("connection-status").innerText = "Can't connect to Cloud";
     document.getElementById("connection-status").style.color = "red";
 }
+
 function onConnect() {
     console.log("Đã kết nối HiveMQ!");
     document.getElementById("connection-status").innerText = "Cloud Connected";
     document.getElementById("connection-status").style.color = "green";
-    // Đăng ký nhận trạng thái từ ESP32
-    client.subscribe(TOPIC_STATUS);
-    console.log("Đã Subscribe thành công topic: data");
+    
+    // Đăng ký nhận trạng thái gộp và heartbeat
+    client.subscribe(TOPIC_STATE);
+    client.subscribe(TOPIC_HEARTBEAT);
+    
+    console.log("Đã Subscribe thành công các topic đồng bộ.");
 }
 
 function onConnectionLost(responseObject) {
@@ -71,35 +77,37 @@ function toggleCamera(isOn) {
     }
 
 function onMessageArrived(message) {
-    console.log("Dữ liệu về: " + message.payloadString);
-    try {
-        let data = JSON.parse(message.payloadString);
-        
-        // Cập nhật cho Đèn 1
-        if (data.hasOwnProperty('Living_light')) {
-            const icon = document.getElementById('icon-Living_light');
-            if (data.Living_light === 1) {
-                icon.classList.add('light-on'); // Thêm hiệu ứng sáng
-                console.log("Giao diện: Đèn 1 Bật");
-            } else {
-                icon.classList.remove('light-on'); // Tắt hiệu ứng sáng
-                console.log("Giao diện: Đèn 1 Tắt");
-            }
-        }
+    const payload = message.payloadString;
+    const topic = message.destinationName;
 
-        if (data.hasOwnProperty('Kitchen_light')) {
-            const icon = document.getElementById('icon-Kitchen_light');
-            if (data.Kitchen_light === 1) {
-                icon.classList.add('light-on'); // Thêm hiệu ứng sáng
-                console.log("Giao diện: Đèn 2 Bật");
-            } else {
-                icon.classList.remove('light-on'); // Tắt hiệu ứng sáng
-                console.log("Giao diện: Đèn 2 Tắt");
-            }
-        }
+    // Xử lý Heartbeat để biết thiết bị còn sống
+    if (topic === TOPIC_HEARTBEAT) {
+        console.log("Heartbeat từ ESP32: " + payload + "s");
+        return;
+    }
 
-        // Cập nhật cho Cửa (Nếu AI của bạn có điều khiển cửa)
-        if (data.hasOwnProperty('Door')) {
+    if (topic === TOPIC_STATE) {
+        try {
+            let data = JSON.parse(payload);
+            console.log("[SYNC] Dữ liệu trạng thái thực tế:", data);
+
+            // 1. Cập nhật Đèn khách
+            const iconLiving = document.getElementById('icon-Living_light');
+            if (data.Living_light === 1 || data.Living_light === true) {
+                iconLiving.classList.add('light-on');
+            } else {
+                iconLiving.classList.remove('light-on');
+            }
+
+            // 2. Cập nhật Đèn bếp
+            const iconKitchen = document.getElementById('icon-Kitchen_light');
+            if (data.Kitchen_light === 1 || data.Kitchen_light === true) {
+                iconKitchen.classList.add('light-on');
+            } else {
+                iconKitchen.classList.remove('light-on');
+            }
+
+            // 3. Cập nhật Cửa Garage
             const iconDoor = document.getElementById('icon-Door');
             if (data.Door === 1) {
                 iconDoor.classList.add('door-open');
@@ -108,53 +116,41 @@ function onMessageArrived(message) {
                 iconDoor.classList.remove('door-open');
                 iconDoor.classList.replace('fa-door-open', 'fa-door-closed');
             }
+
+            // 4. Hiển thị thời gian thực của ESP32 (Nếu có thẻ hiển thị)
+            if (data.esp_time) {
+                console.log("Giờ hệ thống ESP32: " + data.esp_time);
+                // Bạn có thể thêm 1 thẻ <span id="esp-clock"> trong HTML để hiện giờ này
+                const clockEl = document.getElementById('esp-clock');
+                if (clockEl) clockEl.innerText = "Device Time: " + data.esp_time;
+            }
+
+        } catch (e) {
+            console.error("Lỗi đồng bộ giao diện:", e);
         }
-    } catch (e) {
-        console.log("Lỗi xử lý dữ liệu giao diện: " + e);
     }
 }
 
 // hàm này dùng để gửi lệnh từ web đến ESP32 thông qua MQTT
- function animateDevice(device, action) {
-    console.log(`Sending command: ${device} -> ${action}`);
+function animateDevice(device, action) {
+    let val = 0;
+    if (action === 'ON' || action === 'OPEN') val = 1;
+    else val = 0;
 
-    // 1. Tạo dữ liệu để gửi đi
+    // Tạo lệnh lẻ cho từng thiết bị
     let command = {};
-    if (device === 'Living_light') command = { Living_light: action === 'ON' ? 1 : 0 };
-    if (device === 'Kitchen_light') command = { Kitchen_light: action === 'ON' ? 1 : 0 };
-    if (device === 'Door') command = { Door: action === 'OPEN' ? 1 : 0 };
+    command[device] = val;
 
-    // 2. Gửi dữ liệu lên MQTT Topic "data"
+    console.log(`[SEND] Gửi lệnh tới ${device}: ${val}`);
+
     const message = new Paho.MQTT.Message(JSON.stringify(command));
-    message.destinationName = TOPIC_SET;
+    message.destinationName = TOPIC_COMMAND;
     client.send(message);
-
-    // 3. Hiệu ứng giao diện (giữ nguyên logic cũ của bạn)
-    if (device === 'Living_light'){
-        const icon = document.getElementById('icon-Living_light');
-        if (action === 'ON') icon.classList.add('light-on');
-        else icon.classList.remove('light-on');
-    }
-    if (device === 'Kitchen_light'){
-        const icon = document.getElementById('icon-Kitchen_light');
-        if (action === 'ON') icon.classList.add('light-on');
-        else icon.classList.remove('light-on');
-    }
-    if(device === 'Door'){
-        const iconDoor = document.getElementById('icon-Door');
-        if (action === 'OPEN') {
-            iconDoor.classList.add('door-open');
-            iconDoor.classList.replace('fa-door-closed', 'fa-door-open');
-        } else {
-            iconDoor.classList.remove('door-open');
-            iconDoor.classList.replace('fa-door-open', 'fa-door-closed');
-        }
-        }
+    
+    // Lưu ý: Đã loại bỏ phần add/remove class CSS tại đây để chờ đồng bộ từ ESP32
 }
 
-// Thêm các biến quản lý timer vào đầu file esp32.js
-// Biến toàn cục để quản lý tiến trình
-// Đối tượng lưu trữ lịch trình của tất cả thiết bị
+
 let deviceSchedules = {
     'Living_light': { interval: null, startTime: null, endTime: null, isStarted: false },
     'Kitchen_light': { interval: null, startTime: null, endTime: null, isStarted: false },
