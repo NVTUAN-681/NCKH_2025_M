@@ -47,31 +47,46 @@ void updateAndPublishSchedules() {
     timeClient.update();
     long now = (timeClient.getHours() * 3600L) + (timeClient.getMinutes() * 60L) + timeClient.getSeconds();
     
-    // Logic tính toán cho từng thiết bị (Ví dụ cho Living Light)
-    auto updateDevice = [&](DeviceSchedule &s, int pin, bool isServo = false) {
+    // Logic tính toán và CẬP NHẬT TRẠNG THÁI ĐỒNG BỘ
+    auto updateDevice = [&](DeviceSchedule &s, int pin, bool &statusVar, bool isServo = false) {
         if (s.timerActive) {
-            // Tính remainStart
             if (now < s.startTimeSec) s.remainStart = s.startTimeSec - now;
             else s.remainStart = 0;
 
-            // Tính remainEnd
             if (now < s.endTimeSec) s.remainEnd = s.endTimeSec - now;
             else s.remainEnd = 0;
 
-            // Thực thi lệnh khi đến giờ
+            // ĐẾN GIỜ BẬT
             if (s.remainStart == 0 && now < s.endTimeSec) {
-                 if(!isServo) digitalWrite(pin, HIGH); else myServo.write(90);
+                 if(!isServo) {
+                    digitalWrite(pin, HIGH);
+                    statusVar = true; // Cập nhật biến để gửi về Web
+                 } else {
+                    myServo.write(90);
+                    status_door = 1; // Cập nhật trạng thái cửa
+                 }
             }
+            // ĐẾN GIỜ TẮT
             if (s.remainEnd == 0) {
-                 if(!isServo) digitalWrite(pin, LOW); else myServo.write(0);
+                 if(!isServo) {
+                    digitalWrite(pin, LOW);
+                    statusVar = false; // Cập nhật biến để gửi về Web
+                 } else {
+                    myServo.write(0);
+                    status_door = 0;
+                 }
                  s.timerActive = false; // Kết thúc lịch trình
             }
         }
     };
 
-    updateDevice(schedLiving, Living_light);
-    updateDevice(schedKitchen, Kitchen_light);
-    updateDevice(schedDoor, Door, true);
+    updateDevice(schedLiving, Living_light, status_living);
+    updateDevice(schedKitchen, Kitchen_light, status_kitchen);
+    
+    // Riêng cửa cần ép kiểu vì status_door là int
+    bool doorBool = (status_door == 1);
+    updateDevice(schedDoor, Door, doorBool, true);
+    if(doorBool) status_door = 1; else status_door = 0;
 
     // Gửi JSON gộp về Web
     StaticJsonDocument<512> root;
@@ -188,7 +203,7 @@ void setup() {
         target->endTimeSec = timeToSeconds(obj["end_time"]);
         target->timerActive = true;
         Serial.printf("[INFO] Đã đặt lịch cho %s: %s -> %s\n", 
-                      device.c_str(), obj["start_time"].as<char*>(), obj["end_time"].as<char*>());
+                      device.c_str(), obj["start_time"].as<const char*>(), obj["end_time"].as<const char*>());
       }
     }
 

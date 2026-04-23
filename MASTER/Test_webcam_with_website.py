@@ -39,6 +39,14 @@ client.username_pw_set("NCKH2026", "Nckh-2026")
 client.connect(BROKER, Web_Sockets_PORT)
 client.loop_start()
 
+# Thêm vào khu vực khai báo biến toàn cục
+TOPIC_COMMAND = "home/commands"
+last_device_states = {
+    "Living_light": None,
+    "Kitchen_light": None
+}
+
+
 def on_message(client, userdata, msg):
     if msg.topic == "feedback":
         try:
@@ -123,10 +131,14 @@ def generate_frames():
 
                     # XỬ LÝ ĐÈN
                     is_open = is_hand_open(hand_landmarks)
+                    current_val = 1 if is_open else 0
+                
+                # Xác định thiết bị mục tiêu dựa trên nhãn tay
+                    target_device = None
                     if hand_label == "Left":
-                        mqtt_data["Living_light"] = 1 if is_open else 0
+                        target_device = "Living_light"
                     elif hand_label == "Right":
-                        mqtt_data["Kitchen_light"] = 1 if is_open else 0
+                        target_device = "Kitchen_light"
 
                     # Thu thập tọa độ ngón trỏ
                     index_tip = hand_landmarks[8]
@@ -164,16 +176,20 @@ def generate_frames():
                 process_count = 0
 
             # Chỉ gửi MQTT khi có dữ liệu mới và khác với lần gửi trước đó
-            if mqtt_data and mqtt_data != last_sent_data:
-                sent_time = time.time() * 1000
-                mqtt_data["t_sent"] = sent_time
-
-                start_mqtt = time.time()  
-                client.publish("data", json.dumps(mqtt_data), qos=1) # QoS 1 để đảm bảo tin nhắn được gửi đi
-                t2 = (time.time() - start_mqtt) * 1000
-                last_sent_data = mqtt_data.copy()
-
-                print(f"MQTT Sent: {mqtt_data} | AI Time: {t1:.2f} ms | MQTT Time: {t2:.2f} ms")
+            if target_device and current_val != last_device_states[target_device]:
+                    # Cập nhật bộ nhớ trạng thái ngay lập tức
+                    last_device_states[target_device] = current_val
+                    
+                    # Tạo cấu trúc lệnh khớp với dự án hiện tại (ESP32 & Web)
+                    payload = {
+                        "device": target_device,
+                        target_device: current_val,
+                        "t_sent": time.time() * 1000
+                    }
+                    
+                    # Gửi lệnh trực tiếp lên topic mới
+                    client.publish(TOPIC_COMMAND, json.dumps(payload), qos=1)
+                    print(f"[MQTT] Sent Change: {target_device} -> {current_val}")
 
             cv2.putText(frame, f"FPS: {process_count_display}/{frame_count_display}", (20, 100),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)

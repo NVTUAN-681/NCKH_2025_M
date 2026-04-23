@@ -93,7 +93,7 @@ function onMessageArrived(message) {
 
             // 1. Cập nhật Đèn khách
             const iconLiving = document.getElementById('icon-Living_light');
-            if (data.Living_light === 1 || data.Living_light === true) {
+            if (data.Living_light == 1 || data.Living_light == true) {
                 iconLiving.classList.add('light-on');
             } else {
                 iconLiving.classList.remove('light-on');
@@ -101,7 +101,7 @@ function onMessageArrived(message) {
 
             // 2. Cập nhật Đèn bếp
             const iconKitchen = document.getElementById('icon-Kitchen_light');
-            if (data.Kitchen_light === 1 || data.Kitchen_light === true) {
+            if (data.Kitchen_light == 1 || data.Kitchen_light == true) {
                 iconKitchen.classList.add('light-on');
             } else {
                 iconKitchen.classList.remove('light-on');
